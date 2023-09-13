@@ -17,6 +17,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Conditionable;
+use Illuminate\Support\Traits\ForwardsCalls;
 use Konekt\Search\Contracts\SearchDialect;
 use Konekt\Search\Dialects\MySQLDialect;
 use Konekt\Search\Dialects\PostgresDialect;
@@ -28,6 +29,7 @@ use Konekt\Search\Exceptions\UnsupportedOperationException;
 class Searcher
 {
     use Conditionable;
+    use ForwardsCalls;
 
     protected Collection $modelsToSearchThrough;
 
@@ -568,4 +570,20 @@ class Searcher
             default => throw new UnsupportedDatabaseEngineException(DB::connection()->getDriverName()),
         };
     }
+    
+    /**
+     * Handle dynamic method calls into the ModelToSearchThrough instances.
+     *
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return static
+     */
+    public function __call($method, $parameters)
+    {
+        $this->modelsToSearchThrough->each(fn(ModelToSearchThrough $modelToSearchThrough) => 
+            $this->forwardCallTo($modelToSearchThrough, $method, $parameters)
+        );
+        return $this;
+    }
+
 }

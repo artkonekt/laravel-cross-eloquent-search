@@ -8,9 +8,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\ForwardsCalls;
 
 class ModelToSearchThrough
 {
+
+    use ForwardsCalls;
+
     /**
      * Builder to search through.
      */
@@ -250,5 +254,18 @@ class ModelToSearchThrough
         }
 
         return $collection;
+    }
+
+    /**
+     * Handle dynamic method calls into the builder instance
+     *
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return static
+     */
+    public function __call($method, $parameters): static
+    {
+        $this->forwardCallTo($this->builder, $method, $parameters);
+        return $this;
     }
 }
